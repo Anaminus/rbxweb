@@ -40,16 +40,16 @@ func recurseNode(node *html.Node, f func(*html.Node) bool) {
 	}
 }
 
-// DoPostBack is a lower-level function that allows the user to perform a
+// DoRawPost is a lower-level function that allows the user to perform a
 // context-based HTML form POST for a given webpage. On Roblox, many older
 // types of requests require a validation token, which is sent along with the
 // page when viewing it. Many requests are also context-based. That is,
 // manipulation of an item requires knowledge of how the item is displayed on
 // the page.
 //
-// When DoPostBack is called, a GET request is first sent to the page, then
-// the validation tokens are parsed from the response and added as POST
-// parameters automatically.
+// When DoRawPost is called, a GET request is first sent to the page, then the
+// validation tokens are parsed from the response and added as POST parameters
+// automatically.
 //
 // The values in `params` are used as the parameters for the POST request. If
 // a value is empty, then the value is retrieved from the original GET
@@ -60,7 +60,7 @@ func recurseNode(node *html.Node, f func(*html.Node) bool) {
 // `page` must be a full URL, including query values, if required.
 //
 // Whether the client needs to be logged in varies depending on the request.
-func DoPostBack(client *http.Client, page string, params url.Values) (err error) {
+func DoRawPost(client *http.Client, page string, params url.Values) (err error) {
 	// Get form data from URL
 	resp, err := client.Get(page)
 	if err = core.AssertResp(resp, err); err != nil {
