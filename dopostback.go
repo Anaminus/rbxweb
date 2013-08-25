@@ -1,16 +1,42 @@
 package rbxweb
 
 import (
-	"github.com/PuerkitoBio/goquery"
+	"code.google.com/p/go.net/html"
 	"net/http"
 	"net/url"
 	"rbxweb/core"
 )
 
-func findInput(inputs *goquery.Selection, inputValues *url.Values, name string) {
-	s := inputs.Filter(`input[name="` + name + `"]`)
-	if v, e := s.Attr(`value`); e {
-		inputValues.Set(name, v)
+func findInput(inputs []*html.Node, inputValues *url.Values, name string) {
+	for _, node := range inputs {
+		var match bool
+		var value string
+		for _, attr := range node.Attr {
+			if attr.Key == "name" && attr.Val == name {
+				match = true
+				if value != "" {
+					break
+				}
+			} else if attr.Key == "value" {
+				value = attr.Val
+				if match {
+					break
+				}
+			}
+		}
+		if match && value != "" {
+			inputValues.Set(name, value)
+			break
+		}
+	}
+}
+
+func recurseNode(node *html.Node, f func(*html.Node) bool) {
+	for node != nil {
+		if f(node) && node.FirstChild != nil {
+			recurseNode(node.FirstChild, f)
+		}
+		node = node.NextSibling
 	}
 }
 
@@ -42,12 +68,22 @@ func DoPostBack(client *http.Client, page string, params url.Values) (err error)
 	}
 	defer resp.Body.Close()
 
-	doc, err := goquery.NewDocumentFromResponse(resp)
+	// Search for all input tags by parsing the response body
+	root, err := html.Parse(resp.Body)
 	if err != nil {
 		return err
 	}
 
-	inputs := doc.Find(`input`)
+	inputs := make([]*html.Node, 0)
+	recurseNode(root.FirstChild, func(node *html.Node) bool {
+		if node.Type == html.ElementNode {
+			if node.Data == "input" {
+				inputs = append(inputs, node)
+			}
+			return true
+		}
+		return false
+	})
 
 	// Look up validation parameters
 	findInput(inputs, &params, `__VIEWSTATE`)
