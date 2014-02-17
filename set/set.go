@@ -1,24 +1,25 @@
-package rbxweb
+// The set package deals with ROBLOX sets.
+package set
 
 import (
 	"net/http"
 	"net/url"
-	"rbxweb/core"
+	"rbxweb/util"
 )
 
-// AddToSet adds an asset to a set. The set must belong to the current user,
-// and the asset must be addable to sets.
+// Add adds an asset to a set. The set must belong to the current user, and
+// the asset must be addable to sets.
 //
 // This function requires the client to be logged in.
-func AddToSet(client *http.Client, assetId int64, setId int32) (err error) {
+func Add(client *http.Client, assetId int64, setId int32) (err error) {
 	query := url.Values{
 		"rqtype":  {"addtoset"},
-		"assetId": {core.I64toa(assetId)},
-		"setId":   {core.I32toa(setId)},
+		"assetId": {util.I64toa(assetId)},
+		"setId":   {util.I32toa(setId)},
 	}
 
-	resp, err := client.Post(core.GetURL(`www`, `/Sets/SetHandler.ashx`, query), "", nil)
-	if err = core.AssertResp(resp, err); err != nil {
+	resp, err := client.Post(util.GetURL(`www`, `/Sets/SetHandler.ashx`, query), "", nil)
+	if err = util.AssertResp(resp, err); err != nil {
 		return err
 	}
 	resp.Body.Close()

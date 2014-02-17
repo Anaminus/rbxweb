@@ -4,7 +4,7 @@ import (
 	"code.google.com/p/go.net/html"
 	"net/http"
 	"net/url"
-	"rbxweb/core"
+	"rbxweb/util"
 )
 
 func findInput(inputs []*html.Node, inputValues *url.Values, name string) {
@@ -63,7 +63,7 @@ func recurseNode(node *html.Node, f func(*html.Node) bool) {
 func DoRawPost(client *http.Client, page string, params url.Values) (err error) {
 	// Get form data from URL
 	resp, err := client.Get(page)
-	if err = core.AssertResp(resp, err); err != nil {
+	if err = util.AssertResp(resp, err); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
@@ -97,7 +97,7 @@ func DoRawPost(client *http.Client, page string, params url.Values) (err error) 
 
 	// Post to URL with parameters
 	resp, err = client.PostForm(page, params)
-	if err = core.AssertResp(resp, err); err != nil {
+	if err = util.AssertResp(resp, err); err != nil {
 		return err
 	}
 	resp.Body.Close()
