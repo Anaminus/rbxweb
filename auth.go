@@ -6,6 +6,7 @@ import (
 	"errors"
 	"github.com/anaminus/rbxweb/util"
 	"net/http"
+	"net/http/cookiejar"
 )
 
 // Login logs the client into a user account on the website. This is
@@ -20,6 +21,11 @@ func Login(client *http.Client, username string, password string) (err error) {
 	})
 	if err != nil {
 		return err
+	}
+
+	// Ensure the client has a cookiejar
+	if client.Jar == nil {
+		client.Jar, _ = cookiejar.New(&cookiejar.Options{})
 	}
 
 	req, _ := http.NewRequest("POST", util.GetSecureURL(`www`, `/Services/Secure/LoginService.asmx/ValidateLogin`, nil), bytes.NewReader(bd))
