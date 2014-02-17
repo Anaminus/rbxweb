@@ -1,3 +1,4 @@
+// Deals with services related to ROBLOX currency.
 package currency
 
 import (

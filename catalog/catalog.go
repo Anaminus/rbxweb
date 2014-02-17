@@ -1,4 +1,4 @@
-// The catalog package is used for actions related to the ROBLOX catalog.
+// Deals with services related to the ROBLOX catalog.
 package catalog
 
 import (

@@ -1,4 +1,4 @@
-// The group package deals with with ROBLOX groups.
+// Deals with services related to ROBLOX groups.
 package group
 
 import (

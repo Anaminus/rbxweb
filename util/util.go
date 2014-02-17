@@ -1,4 +1,4 @@
-// The util package provides common utilies for all rbxweb packages.
+// Provides common utilies for all rbxweb packages.
 package util
 
 import (
