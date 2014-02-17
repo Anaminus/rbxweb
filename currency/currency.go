@@ -4,12 +4,12 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/anaminus/rbxweb"
+	"github.com/anaminus/rbxweb/util"
 	"io"
 	"net/http"
 	"net/url"
 	"os"
-	"rbxweb"
-	"rbxweb/util"
 	"time"
 )
 

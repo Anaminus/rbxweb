@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/anaminus/rbxweb/util"
 	"net/http"
-	"rbxweb/util"
 )
 
 // Login logs the client into a user account on the website. This is

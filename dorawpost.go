@@ -2,9 +2,9 @@ package rbxweb
 
 import (
 	"code.google.com/p/go.net/html"
+	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/url"
-	"rbxweb/util"
 )
 
 func findInput(inputs []*html.Node, inputValues *url.Values, name string) {

@@ -2,9 +2,9 @@
 package group
 
 import (
+	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/url"
-	"rbxweb/util"
 )
 
 // Shout sets the status message of a given group. The account the client is

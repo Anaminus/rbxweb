@@ -3,9 +3,9 @@ package catalog
 
 import (
 	"encoding/json"
+	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/url"
-	"rbxweb/util"
 )
 
 // Used with the Category field of a Query.

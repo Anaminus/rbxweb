@@ -4,9 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/url"
-	"rbxweb/util"
 )
 
 // UserInfo contains information about the current user.
