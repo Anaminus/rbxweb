@@ -2,9 +2,9 @@
 package set
 
 import (
+	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/url"
-	"rbxweb/util"
 )
 
 // Add adds an asset to a set. The set must belong to the current user, and
