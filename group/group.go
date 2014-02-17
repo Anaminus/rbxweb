@@ -1,10 +1,10 @@
+// The group package deals with with ROBLOX groups.
 package group
 
 import (
 	"net/http"
 	"net/url"
-	"rbxweb"
-	"rbxweb/core"
+	"rbxweb/util"
 )
 
 // Shout sets the status message of a given group. The account the client is
@@ -13,7 +13,7 @@ import (
 //
 // This function requires the client to be logged in.
 func Shout(client *http.Client, groupID int32, message string) (success bool) {
-	page := core.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {core.I32toa(groupID)}})
+	page := util.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {util.I32toa(groupID)}})
 	err := rbxweb.DoRawPost(client, page, url.Values{
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupStatusPane$StatusTextBox":               {message},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupStatusPane$StatusSubmitButton":          {},
@@ -30,7 +30,7 @@ func Shout(client *http.Client, groupID int32, message string) (success bool) {
 //
 // This function requires the client to be logged in.
 func Wall(client *http.Client, groupID int32, message string) (success bool) {
-	page := core.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {core.I32toa(groupID)}})
+	page := util.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {util.I32toa(groupID)}})
 	err := rbxweb.DoRawPost(client, page, url.Values{
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupWallPane$NewPost":                       {message},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupWallPane$NewPostButton":                 {},

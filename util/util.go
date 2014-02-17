@@ -1,22 +1,13 @@
-package core
+// The util package provides common utilies for all rbxweb packages.
+package util
 
 import (
 	"errors"
 	"net/http"
 	"net/url"
+	"rbxweb"
 	"strconv"
 )
-
-// BaseDomain is the URL domain to which all requests will be sent.
-//
-// Subdomains are handled automatically as a part of API requests. Alternative
-// domains, such as gametest, follow a naming scheme that allows for easy
-// domain switching. Example:
-//
-//     BaseDomain:                  With subdomain:
-//     roblox.com               --> www.roblox.com
-//     gametest.robloxlabs.com  --> www.gametest.robloxlabs.com
-var BaseDomain = `roblox.com`
 
 // GetURL constructs a URL using BaseDomain and the given arguments, with HTTP
 // as the protocol.
@@ -30,7 +21,7 @@ func GetURL(subdomain string, path string, query url.Values) (url string) {
 	if subdomain != `` {
 		url = url + subdomain + `.`
 	}
-	url = url + BaseDomain + path
+	url = url + rbxweb.BaseDomain + path
 	if query != nil {
 		url = url + `?` + query.Encode()
 	}
@@ -43,7 +34,7 @@ func GetSecureURL(subdomain string, path string, query url.Values) (url string) 
 	if subdomain != `` {
 		url = url + subdomain + `.`
 	}
-	url = url + BaseDomain + path
+	url = url + rbxweb.BaseDomain + path
 	if query != nil {
 		url = url + `?` + query.Encode()
 	}
@@ -72,7 +63,7 @@ func Atoi32(s string) (i int32, err error) {
 	return int32(i64), nil
 }
 
-// Atoi32 converts a string to an int64.
+// Atoi64 converts a string to an int64.
 func Atoi64(s string) (i int64, err error) {
 	return strconv.ParseInt(s, 10, 64)
 }
