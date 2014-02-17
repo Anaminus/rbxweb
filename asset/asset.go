@@ -83,9 +83,9 @@ func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error
 	return asset[0].AssetId, nil
 }
 
-// UploadAsset generically uploads data from `reader` as an asset to the
-// ROBLOX website. `info` can be used to specify information about the model.
-// The following parameters are known:
+// Upload generically uploads data from `reader` as an asset to the ROBLOX
+// website. `info` can be used to specify information about the model. The
+// following parameters are known:
 //
 //     type           - The type of asset.
 //     assetid        - The id of the asset to update. 0 uploads a new asset.
@@ -105,7 +105,7 @@ func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error
 // purpose is unknown.
 //
 // This function requires the client to be logged in.
-func UploadAsset(client *http.Client, reader io.Reader, info url.Values) (ticket int64, err error) {
+func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int64, err error) {
 	var buf *bytes.Buffer
 	buf.ReadFrom(reader)
 	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, info), buf)
@@ -150,7 +150,7 @@ func UploadModel(client *http.Client, reader io.Reader, modelID int64, info url.
 		}
 	}
 
-	_, err = UploadAsset(client, reader, query)
+	_, err = Upload(client, reader, query)
 	if err != nil {
 		return 0, err
 	}
