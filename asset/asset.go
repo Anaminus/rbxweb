@@ -1,4 +1,4 @@
-// The asset package deals with ROBLOX assets.
+// Deals with services related to ROBLOX assets.
 package asset
 
 import (

@@ -1,4 +1,4 @@
-// The set package deals with ROBLOX sets.
+// Deals with services related to ROBLOX sets.
 package set
 
 import (
