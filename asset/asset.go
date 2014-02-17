@@ -210,6 +210,7 @@ func UpdatePlaceFile(client *http.Client, filename string, placeID int64) (err e
 	return UpdatePlace(client, file, placeID)
 }
 
+// Contains information about an asset.
 type Info struct {
 	AssetId     int64
 	ProductId   int64
@@ -235,6 +236,7 @@ type Info struct {
 	ContentRatingTypeId    int32
 }
 
+// GetInfo returns information about an asset, given an asset id.
 func GetInfo(client *http.Client, id int64) (info AssetInfo, err error) {
 	query := url.Values{
 		"assetId": {util.I64toa(id)},
