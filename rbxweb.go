@@ -1,12 +1,12 @@
 // The rbxweb package provides an interface to many of ROBLOX's web-based
 // services. The following subpackages exist:
 //
-// - https://github.com/anaminus/rbxweb/asset
-// - https://github.com/anaminus/rbxweb/catalog
-// - https://github.com/anaminus/rbxweb/currency
-// - https://github.com/anaminus/rbxweb/group
-// - https://github.com/anaminus/rbxweb/set
-// - https://github.com/anaminus/rbxweb/util
+//   https://github.com/anaminus/rbxweb/asset
+//   https://github.com/anaminus/rbxweb/catalog
+//   https://github.com/anaminus/rbxweb/currency
+//   https://github.com/anaminus/rbxweb/group
+//   https://github.com/anaminus/rbxweb/set
+//   https://github.com/anaminus/rbxweb/util
 package rbxweb
 
 // BaseDomain is the URL domain to which all requests will be sent.
