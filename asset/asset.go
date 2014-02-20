@@ -109,7 +109,7 @@ func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int6
 	var buf *bytes.Buffer
 	buf.ReadFrom(reader)
 	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, info), buf)
-	req.Header.Set("User-Agent", "Roblox/WinInet")
+	req.Header.Set("User-Agent", "roblox/rbxweb")
 
 	resp, err := client.Do(req)
 	if err = util.AssertResp(resp, err); err != nil {
