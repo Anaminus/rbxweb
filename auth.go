@@ -7,7 +7,10 @@ import (
 	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/http/cookiejar"
+	"net/url"
 )
+
+var ErrLoggedIn = errors.New("client is already logged in")
 
 // Login logs the client into a user account on the website. This is
 // neccessary for many API functions to properly execute.
@@ -26,6 +29,15 @@ func Login(client *http.Client, username string, password string) (err error) {
 	// Ensure the client has a cookiejar
 	if client.Jar == nil {
 		client.Jar, _ = cookiejar.New(&cookiejar.Options{})
+	}
+	// Check if the client is already logged in
+	domain, _ := url.Parse(util.GetURL(`www`, ``, nil))
+	cookies := client.Jar.Cookies(domain)
+	for _, cookie := range cookies {
+		if cookie.Name == ".ROBLOSECURITY" {
+			// Client is already logged in
+			return ErrLoggedIn
+		}
 	}
 
 	req, _ := http.NewRequest("POST", util.GetSecureURL(`www`, `/Services/Secure/LoginService.asmx/ValidateLogin`, nil), bytes.NewReader(bd))
