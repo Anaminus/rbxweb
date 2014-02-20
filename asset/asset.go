@@ -156,7 +156,7 @@ func UploadModel(client *http.Client, reader io.Reader, modelID int64, info url.
 	}
 	if modelID == 0 {
 		id, _ := GetLatestModel(client, 0)
-		return id
+		return id, nil
 	} else {
 		return modelID, nil
 	}
