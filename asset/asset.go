@@ -237,13 +237,13 @@ type Info struct {
 }
 
 // GetInfo returns information about an asset, given an asset id.
-func GetInfo(client *http.Client, id int64) (info AssetInfo, err error) {
+func GetInfo(client *http.Client, id int64) (info Info, err error) {
 	query := url.Values{
 		"assetId": {util.I64toa(id)},
 	}
 	resp, err := client.Get(util.GetURL(`api`, `/marketplace/productinfo`, query))
 	if err = util.AssertResp(resp, err); err != nil {
-		return AssetInfo{}, err
+		return Info{}, err
 	}
 	defer resp.Body.Close()
 
