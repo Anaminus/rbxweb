@@ -83,6 +83,29 @@ func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error
 	return asset[0].AssetId, nil
 }
 
+// GetIdFromVersion returns an asset id from an asset version id.
+func GetIdFromVersion(client *http.Client, assetVersionId int64) (assetId int64, err error) {
+	query := url.Values{
+		"avid": {util.I64toa(assetVersionId)},
+	}
+
+	// This relies on how asset names are converted to url names. Currently,
+	// if an asset name is "_", its url becomes "unnamed".
+	req, _ := http.NewRequest("HEAD", util.GetURL(`www`, `/_-item`, query), nil)
+	resp, err := client.Do(req)
+	if err = util.AssertResp(resp, err); err != nil {
+		return 0, err
+	}
+	resp.Body.Close()
+
+	values, err := url.ParseQuery(resp.Header.Get("Location"))
+	if err = util.AssertResp(resp, err); err != nil {
+		return 0, err
+	}
+
+	return util.Atoi64(values.Get("id"))
+}
+
 // Upload generically uploads data from `reader` as an asset to the ROBLOX
 // website. `info` can be used to specify information about the model. The
 // following parameters are known:
