@@ -106,7 +106,7 @@ func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error
 //
 // This function requires the client to be logged in.
 func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int64, err error) {
-	var buf *bytes.Buffer
+	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
 	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, info), buf)
 	req.Header.Set("User-Agent", "roblox/rbxweb")
@@ -117,7 +117,7 @@ func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int6
 	}
 	defer resp.Body.Close()
 
-	var r bytes.Buffer
+	r := new(bytes.Buffer)
 	r.ReadFrom(resp.Body)
 	ticket, _ = util.Atoi64(r.String())
 
@@ -185,7 +185,7 @@ func UpdatePlace(client *http.Client, reader io.Reader, placeID int64) (err erro
 		"assetid": {util.I64toa(placeID)},
 		"type":    {"Place"},
 	}
-	var buf *bytes.Buffer
+	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
 	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, query), buf)
 	req.Header.Set("User-Agent", "Roblox")
