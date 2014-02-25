@@ -124,11 +124,14 @@ func GetIdFromVersion(client *http.Client, assetVersionId int64) (assetId int64,
 // assets. That is, updating an asset will only update the contents, but not
 // the information about it.
 //
-// `ticket` is the response of the upload request, which is an integer, whose
-// purpose is unknown.
+// `assetId` is the id of the uploaded asset. If a new asset is uploaded, this
+// will be retrieved with an extra request.
+//
+// `assetVersionId` is the version id of the uploaded asset. This is unique
+// for each upload.
 //
 // This function requires the client to be logged in.
-func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int64, err error) {
+func Upload(client *http.Client, reader io.Reader, info url.Values) (assetId int64, assetVersionId int64, err error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
 	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, info), buf)
@@ -136,20 +139,27 @@ func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int6
 
 	resp, err := client.Do(req)
 	if err = util.AssertResp(resp, err); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	defer resp.Body.Close()
 
 	r := new(bytes.Buffer)
 	r.ReadFrom(resp.Body)
-	ticket, _ = util.Atoi64(r.String())
+	assetVersionId, _ = util.Atoi64(r.String())
 
-	return ticket, err
+	if aid := info.Get("assetid"); aid == "" && aid == "0" {
+		// if asset is new, retrieve the id from the version
+		assetId, err = GetIdFromVersion(client, assetVersionId)
+	} else {
+		assetId, _ = util.Atoi64(aid)
+	}
+
+	return assetId, assetVersionId, err
 }
 
 // UploadModel uploads data from `reader` to Roblox as a Model asset. If
-// updating an existing model, `modelID` should be the id of the model. If
-// `modelID` is 0, then a new model will be uploaded. If uploading a new
+// updating an existing model, `modelId` should be the id of the model. If
+// `modelId` is 0, then a new model will be uploaded. If uploading a new
 // model, `info` can be used to specify information about the model.
 //
 // In case the model was newly created, UploadModel attempts to return the id
@@ -157,9 +167,9 @@ func Upload(client *http.Client, reader io.Reader, info url.Values) (ticket int6
 // asset.
 //
 // This function requires the client to be logged in.
-func UploadModel(client *http.Client, reader io.Reader, modelID int64, info url.Values) (assetID int64, err error) {
+func UploadModel(client *http.Client, reader io.Reader, modelId int64, info url.Values) (assetId int64, assetVersionId int64, err error) {
 	query := url.Values{
-		"assetid": {util.I64toa(modelID)},
+		"assetid": {util.I64toa(modelId)},
 		"type":    {"Model"},
 		//	"name":          {"Unnamed Model"},
 		//	"description":   {""},
@@ -173,39 +183,34 @@ func UploadModel(client *http.Client, reader io.Reader, modelID int64, info url.
 		}
 	}
 
-	_, err = Upload(client, reader, query)
+	assetId, assetVersionId, err = Upload(client, reader, query)
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
-	if modelID == 0 {
-		id, _ := GetLatestModel(client, 0)
-		return id, nil
-	} else {
-		return modelID, nil
-	}
+	return assetId, assetVersionId, err
 }
 
 // UploadModelFile is similar to UploadModel, but gets the data from a file
 // name.
 //
 // This function requires the client to be logged in.
-func UploadModelFile(client *http.Client, filename string, modelID int64, info url.Values) (assetID int64, err error) {
+func UploadModelFile(client *http.Client, filename string, modelId int64, info url.Values) (assetId int64, assetVersionId int64, err error) {
 	var file *os.File
 	if file, err = os.Open(filename); err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 	defer file.Close()
-	return UploadModel(client, file, modelID, info)
+	return UploadModel(client, file, modelId, info)
 }
 
 // UpdatePlace uploads data from `reader` to Roblox as a Place asset.
-// `placeID` must be the id of an existing place. This function cannot create
+// `placeId` must be the id of an existing place. This function cannot create
 // a new place.
 //
 // This function requires the client to be logged in.
-func UpdatePlace(client *http.Client, reader io.Reader, placeID int64) (err error) {
+func UpdatePlace(client *http.Client, reader io.Reader, placeId int64) (err error) {
 	query := url.Values{
-		"assetid": {util.I64toa(placeID)},
+		"assetid": {util.I64toa(placeId)},
 		"type":    {"Place"},
 	}
 	buf := new(bytes.Buffer)
@@ -224,13 +229,13 @@ func UpdatePlace(client *http.Client, reader io.Reader, placeID int64) (err erro
 // UpdatePlaceFile is similar to UpdatePlace, but gets the data from a file name.
 //
 // This function requires the client to be logged in.
-func UpdatePlaceFile(client *http.Client, filename string, placeID int64) (err error) {
+func UpdatePlaceFile(client *http.Client, filename string, placeId int64) (err error) {
 	var file *os.File
 	if file, err = os.Open(filename); err != nil {
 		return
 	}
 	defer file.Close()
-	return UpdatePlace(client, file, placeID)
+	return UpdatePlace(client, file, placeId)
 }
 
 // Contains information about an asset.
