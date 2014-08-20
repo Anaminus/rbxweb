@@ -1,4 +1,5 @@
-package rbxweb
+// Deals with services related to users.
+package user
 
 import (
 	"bytes"
@@ -8,8 +9,8 @@ import (
 	"net/url"
 )
 
-// UserInfo contains information about the current user.
-type UserInfo struct {
+// Info contains information about the current user.
+type Info struct {
 	UserID                  int32
 	UserName                string
 	RobuxBalance            int64
@@ -18,10 +19,10 @@ type UserInfo struct {
 	IsAnyBuildersClubMember bool
 }
 
-// GetUserInfo returns information about the current user.
+// GetInfo returns information about the current user.
 //
 // This function requires the client to be logged in.
-func GetUserInfo(client *Client) (info UserInfo, err error) {
+func GetInfo(client *Client) (info Info, err error) {
 	resp, err := client.Get(client.GetURL(`www`, `/MobileAPI/UserInfo`, nil))
 	if err = client.AssertResp(resp, err); err != nil {
 		return info, err
@@ -34,10 +35,10 @@ func GetUserInfo(client *Client) (info UserInfo, err error) {
 	return info, nil
 }
 
-// GetCurrentUserId returns the id of the user currently logged in.
+// GetCurrentId returns the id of the user currently logged in.
 //
 // This function requires the client to be logged in.
-func GetCurrentUserId(client *Client) (id int32, err error) {
+func GetCurrentId(client *Client) (id int32, err error) {
 	resp, err := client.Get(client.GetURL(`www`, `/Game/GetCurrentUser.ashx`, nil))
 	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
