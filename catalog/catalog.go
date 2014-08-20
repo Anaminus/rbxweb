@@ -3,8 +3,7 @@ package catalog
 
 import (
 	"encoding/json"
-	"github.com/anaminus/rbxweb/util"
-	"net/http"
+	"github.com/anaminus/rbxweb"
 	"net/url"
 )
 
@@ -218,10 +217,10 @@ func convertQuery(query Query) (values url.Values) {
 }
 
 // Search is used to perform a search query for Roblox assets.
-func Search(client *http.Client, query Query) (result []Result, err error) {
+func Search(client *rbxweb.Client, query Query) (result []Result, err error) {
 	values := convertQuery(query)
-	resp, err := client.Get(util.GetURL(`www`, `/catalog/json`, values))
-	if err = util.AssertResp(resp, err); err != nil {
+	resp, err := client.Get(client.GetURL(`www`, `/catalog/json`, values))
+	if err = client.AssertResp(resp, err); err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
@@ -235,7 +234,7 @@ func Search(client *http.Client, query Query) (result []Result, err error) {
 // results are found. If n is less than 0, then every found result will be
 // returned. If PageNumber is specified in query, then requests will start
 // from that page.
-func SearchAll(client *http.Client, n int, query Query) (result []Result, err error) {
+func SearchAll(client *rbxweb.Client, n int, query Query) (result []Result, err error) {
 	if n == 0 {
 		return
 	}

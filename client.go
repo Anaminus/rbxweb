@@ -1,5 +1,4 @@
-// Provides common utilies for all rbxweb packages.
-package util
+package rbxweb
 
 import (
 	"errors"
@@ -8,16 +7,26 @@ import (
 	"strconv"
 )
 
-// BaseDomain is the URL domain to which all requests will be sent.
+// Client embeds a http.Client, and is used with every function that makes a
+// request.
 //
-// Subdomains are handled automatically as a part of API requests. Alternative
-// domains, such as gametest, follow a scheme that makes switching domains
-// easier:
+// BaseDomain is the URL domain to which all requests will be sent. Subdomains
+// are handled automatically as a part of API requests. Alternative domains,
+// such as gametest, follow a scheme that makes switching domains easier:
 //
 //     BaseDomain:                  With subdomain:
 //     roblox.com               --> www.roblox.com
 //     gametest.robloxlabs.com  --> www.gametest.robloxlabs.com
-var BaseDomain = `roblox.com`
+type Client struct {
+	http.Client
+	BaseDomain string
+}
+
+func NewClient() *Client {
+	return &Client{
+		BaseDomain: "roblox.com",
+	}
+}
 
 // GetURL constructs a URL using BaseDomain and the given arguments, with HTTP
 // as the protocol.
@@ -26,12 +35,12 @@ var BaseDomain = `roblox.com`
 // base domain. `path` is the part of the URL that appears after the base
 // domain. If `query` is not nil, then it is encoded into query parameters and
 // added to the end of the URL.
-func GetURL(subdomain string, path string, query url.Values) (url string) {
+func (client *Client) GetURL(subdomain string, path string, query url.Values) (url string) {
 	url = `http://`
 	if subdomain != `` {
 		url = url + subdomain + `.`
 	}
-	url = url + BaseDomain + path
+	url = url + client.BaseDomain + path
 	if query != nil {
 		url = url + `?` + query.Encode()
 	}
@@ -39,12 +48,12 @@ func GetURL(subdomain string, path string, query url.Values) (url string) {
 }
 
 // GetSecureURL is similar to GetURL, but it uses HTTPS instead of HTTP.
-func GetSecureURL(subdomain string, path string, query url.Values) (url string) {
+func (client *Client) GetSecureURL(subdomain string, path string, query url.Values) (url string) {
 	url = `https://`
 	if subdomain != `` {
 		url = url + subdomain + `.`
 	}
-	url = url + BaseDomain + path
+	url = url + client.BaseDomain + path
 	if query != nil {
 		url = url + `?` + query.Encode()
 	}
@@ -53,11 +62,11 @@ func GetSecureURL(subdomain string, path string, query url.Values) (url string) 
 
 // AssertResp checks whether a HTTP response errored. Also errors if the
 // response has a non-2XX status code.
-func AssertResp(resp *http.Response, err error) error {
+func (client *Client) AssertResp(resp *http.Response, err error) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		resp.Body.Close()
 		return errors.New(strconv.Itoa(resp.StatusCode) + ": " + http.StatusText(resp.StatusCode))
 	}
@@ -65,7 +74,7 @@ func AssertResp(resp *http.Response, err error) error {
 }
 
 // Atoi32 converts a string to an int32.
-func Atoi32(s string) (i int32, err error) {
+func (client *Client) Atoi32(s string) (i int32, err error) {
 	i64, err := strconv.ParseInt(s, 10, 32)
 	if err != nil {
 		return 0, err
@@ -74,16 +83,16 @@ func Atoi32(s string) (i int32, err error) {
 }
 
 // Atoi64 converts a string to an int64.
-func Atoi64(s string) (i int64, err error) {
+func (client *Client) Atoi64(s string) (i int64, err error) {
 	return strconv.ParseInt(s, 10, 64)
 }
 
 // I32toa converts an int32 to a string.
-func I32toa(i int32) (s string) {
+func (client *Client) I32toa(i int32) (s string) {
 	return strconv.FormatInt(int64(i), 10)
 }
 
 // I64toa converts an int64 to a string.
-func I64toa(i int64) (s string) {
+func (client *Client) I64toa(i int64) (s string) {
 	return strconv.FormatInt(i, 10)
 }

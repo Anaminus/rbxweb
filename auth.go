@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -14,7 +13,7 @@ var ErrLoggedIn = errors.New("client is already logged in")
 
 // Login logs the client into a user account on the website. This is
 // neccessary for many API functions to properly execute.
-func Login(client *http.Client, username string, password string) (err error) {
+func Login(client *Client, username string, password string) (err error) {
 	bd, err := json.Marshal(map[string]interface{}{
 		"userName":        username,
 		"password":        password,
@@ -31,7 +30,7 @@ func Login(client *http.Client, username string, password string) (err error) {
 		client.Jar, _ = cookiejar.New(&cookiejar.Options{})
 	}
 	// Check if the client is already logged in
-	domain, _ := url.Parse(util.GetURL(`www`, ``, nil))
+	domain, _ := url.Parse(client.GetURL(`www`, ``, nil))
 	cookies := client.Jar.Cookies(domain)
 	for _, cookie := range cookies {
 		if cookie.Name == ".ROBLOSECURITY" {
@@ -40,11 +39,11 @@ func Login(client *http.Client, username string, password string) (err error) {
 		}
 	}
 
-	req, _ := http.NewRequest("POST", util.GetSecureURL(`www`, `/Services/Secure/LoginService.asmx/ValidateLogin`, nil), bytes.NewReader(bd))
+	req, _ := http.NewRequest("POST", client.GetSecureURL(`www`, `/Services/Secure/LoginService.asmx/ValidateLogin`, nil), bytes.NewReader(bd))
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 
 	resp, err := client.Do(req)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
@@ -64,10 +63,10 @@ func Login(client *http.Client, username string, password string) (err error) {
 }
 
 // Logout logs the client of out of the current user account.
-func Logout(client *http.Client) (err error) {
-	req, _ := http.NewRequest("POST", util.GetSecureURL(`www`, `/authentication/logout`, nil), nil)
+func Logout(client *Client) (err error) {
+	req, _ := http.NewRequest("POST", client.GetSecureURL(`www`, `/authentication/logout`, nil), nil)
 	resp, err := client.Do(req)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return err
 	}
 	resp.Body.Close()

@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/anaminus/rbxweb"
-	"github.com/anaminus/rbxweb/util"
 	"io"
 	"net/http"
 	"net/url"
@@ -53,11 +52,10 @@ const (
 
 // GetLatestModel returns the asset id of the latest model for a given user.
 // While this is useful for retrieving the asset id of a newly created model
-// that was just uploaded, it is not necessarily reliable for this purpose. If
-// `userId` is 0, then the id of the current user will be used.
-func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error) {
+// that was just uploaded, it is not necessarily reliable for this purpose.
+func GetLatestModel(client *rbxweb.Client, userId int32) (assetId int64, err error) {
 	if userId == 0 {
-		userId, _ = rbxweb.GetCurrentUserID(client)
+		return 0, errors.New("invalid user id")
 	}
 
 	query := url.Values{
@@ -65,10 +63,10 @@ func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error
 		"SortType":          {"RecentlyUpdated"},
 		"IncludeNotForSale": {"true"},
 		"ResultsPerPage":    {"1"},
-		"CreatorID":         {util.I32toa(userId)},
+		"CreatorID":         {client.I32toa(userId)},
 	}
-	resp, err := client.Get(util.GetURL(`api`, `/catalog/json`, query))
-	if err = util.AssertResp(resp, err); err != nil {
+	resp, err := client.Get(client.GetURL(`api`, `/catalog/json`, query))
+	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close()
@@ -84,26 +82,26 @@ func GetLatestModel(client *http.Client, userId int32) (assetId int64, err error
 }
 
 // GetIdFromVersion returns an asset id from an asset version id.
-func GetIdFromVersion(client *http.Client, assetVersionId int64) (assetId int64, err error) {
+func GetIdFromVersion(client *rbxweb.Client, assetVersionId int64) (assetId int64, err error) {
 	query := url.Values{
-		"avid": {util.I64toa(assetVersionId)},
+		"avid": {client.I64toa(assetVersionId)},
 	}
 
 	// This relies on how asset names are converted to url names. Currently,
 	// if an asset name is "_", its url becomes "unnamed".
-	req, _ := http.NewRequest("HEAD", util.GetURL(`www`, `/_-item`, query), nil)
+	req, _ := http.NewRequest("HEAD", client.GetURL(`www`, `/_-item`, query), nil)
 	resp, err := client.Do(req)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
 	resp.Body.Close()
 
 	values, err := url.ParseQuery(resp.Header.Get("Location"))
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
 
-	return util.Atoi64(values.Get("id"))
+	return client.Atoi64(values.Get("id"))
 }
 
 // Upload generically uploads data from `reader` as an asset to the ROBLOX
@@ -124,37 +122,28 @@ func GetIdFromVersion(client *http.Client, assetVersionId int64) (assetId int64,
 // assets. That is, updating an asset will only update the contents, but not
 // the information about it.
 //
-// `assetId` is the id of the uploaded asset. If a new asset is uploaded, this
-// will be retrieved with an extra request.
-//
 // `assetVersionId` is the version id of the uploaded asset. This is unique
-// for each upload.
+// for each upload. This can be used with GetIdFromVersion to get the asset
+// id.
 //
 // This function requires the client to be logged in.
-func Upload(client *http.Client, reader io.Reader, info url.Values) (assetId int64, assetVersionId int64, err error) {
+func Upload(client *rbxweb.Client, reader io.Reader, info url.Values) (assetVersionId int64, err error) {
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
-	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, info), buf)
+	req, _ := http.NewRequest("POST", client.GetURL(`www`, `/Data/Upload.ashx`, info), buf)
 	req.Header.Set("User-Agent", "roblox/rbxweb")
 
 	resp, err := client.Do(req)
-	if err = util.AssertResp(resp, err); err != nil {
-		return 0, 0, err
+	if err = client.AssertResp(resp, err); err != nil {
+		return 0, err
 	}
 	defer resp.Body.Close()
 
 	r := new(bytes.Buffer)
 	r.ReadFrom(resp.Body)
-	assetVersionId, _ = util.Atoi64(r.String())
+	assetVersionId, _ = client.Atoi64(r.String())
 
-	if aid := info.Get("assetid"); aid == "" && aid == "0" {
-		// if asset is new, retrieve the id from the version
-		assetId, err = GetIdFromVersion(client, assetVersionId)
-	} else {
-		assetId, _ = util.Atoi64(aid)
-	}
-
-	return assetId, assetVersionId, err
+	return assetVersionId, err
 }
 
 // UploadModel uploads data from `reader` to Roblox as a Model asset. If
@@ -162,14 +151,10 @@ func Upload(client *http.Client, reader io.Reader, info url.Values) (assetId int
 // `modelId` is 0, then a new model will be uploaded. If uploading a new
 // model, `info` can be used to specify information about the model.
 //
-// In case the model was newly created, UploadModel attempts to return the id
-// of the model. Note that this may not be the actual id of the uploaded
-// asset.
-//
 // This function requires the client to be logged in.
-func UploadModel(client *http.Client, reader io.Reader, modelId int64, info url.Values) (assetId int64, assetVersionId int64, err error) {
+func UploadModel(client *rbxweb.Client, reader io.Reader, modelId int64, info url.Values) (assetVersionId int64, err error) {
 	query := url.Values{
-		"assetid": {util.I64toa(modelId)},
+		"assetid": {client.I64toa(modelId)},
 		"type":    {"Model"},
 		//	"name":          {"Unnamed Model"},
 		//	"description":   {""},
@@ -183,21 +168,17 @@ func UploadModel(client *http.Client, reader io.Reader, modelId int64, info url.
 		}
 	}
 
-	assetId, assetVersionId, err = Upload(client, reader, query)
-	if err != nil {
-		return 0, 0, err
-	}
-	return assetId, assetVersionId, err
+	return assetVersionId, err
 }
 
 // UploadModelFile is similar to UploadModel, but gets the data from a file
 // name.
 //
 // This function requires the client to be logged in.
-func UploadModelFile(client *http.Client, filename string, modelId int64, info url.Values) (assetId int64, assetVersionId int64, err error) {
+func UploadModelFile(client *rbxweb.Client, filename string, modelId int64, info url.Values) (assetVersionId int64, err error) {
 	var file *os.File
 	if file, err = os.Open(filename); err != nil {
-		return 0, 0, err
+		return 0, err
 	}
 	defer file.Close()
 	return UploadModel(client, file, modelId, info)
@@ -208,18 +189,18 @@ func UploadModelFile(client *http.Client, filename string, modelId int64, info u
 // a new place.
 //
 // This function requires the client to be logged in.
-func UpdatePlace(client *http.Client, reader io.Reader, placeId int64) (err error) {
+func UpdatePlace(client *rbxweb.Client, reader io.Reader, placeId int64) (err error) {
 	query := url.Values{
-		"assetid": {util.I64toa(placeId)},
+		"assetid": {client.I64toa(placeId)},
 		"type":    {"Place"},
 	}
 	buf := new(bytes.Buffer)
 	buf.ReadFrom(reader)
-	req, _ := http.NewRequest("POST", util.GetURL(`www`, `/Data/Upload.ashx`, query), buf)
+	req, _ := http.NewRequest("POST", client.GetURL(`www`, `/Data/Upload.ashx`, query), buf)
 	req.Header.Set("User-Agent", "Roblox")
 
 	resp, err := client.Do(req)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
@@ -229,7 +210,7 @@ func UpdatePlace(client *http.Client, reader io.Reader, placeId int64) (err erro
 // UpdatePlaceFile is similar to UpdatePlace, but gets the data from a file name.
 //
 // This function requires the client to be logged in.
-func UpdatePlaceFile(client *http.Client, filename string, placeId int64) (err error) {
+func UpdatePlaceFile(client *rbxweb.Client, filename string, placeId int64) (err error) {
 	var file *os.File
 	if file, err = os.Open(filename); err != nil {
 		return
@@ -265,12 +246,12 @@ type Info struct {
 }
 
 // GetInfo returns information about an asset, given an asset id.
-func GetInfo(client *http.Client, id int64) (info Info, err error) {
+func GetInfo(client *rbxweb.Client, id int64) (info Info, err error) {
 	query := url.Values{
-		"assetId": {util.I64toa(id)},
+		"assetId": {client.I64toa(id)},
 	}
-	resp, err := client.Get(util.GetURL(`api`, `/marketplace/productinfo`, query))
-	if err = util.AssertResp(resp, err); err != nil {
+	resp, err := client.Get(client.GetURL(`api`, `/marketplace/productinfo`, query))
+	if err = client.AssertResp(resp, err); err != nil {
 		return Info{}, err
 	}
 	defer resp.Body.Close()
