@@ -13,7 +13,7 @@ import (
 // This function requires the client to be logged in.
 func Shout(client *rbxweb.Client, groupID int32, message string) (success bool) {
 	page := client.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {client.I32toa(groupID)}})
-	err := rbxweb.DoRawPost(client, page, url.Values{
+	err := client.DoRawPost(page, url.Values{
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupStatusPane$StatusTextBox":               {message},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupStatusPane$StatusSubmitButton":          {},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$rbxGroupRoleSetMembersPane$currentRoleSetID": {},
@@ -30,7 +30,7 @@ func Shout(client *rbxweb.Client, groupID int32, message string) (success bool) 
 // This function requires the client to be logged in.
 func Wall(client *rbxweb.Client, groupID int32, message string) (success bool) {
 	page := client.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {client.I32toa(groupID)}})
-	err := rbxweb.DoRawPost(client, page, url.Values{
+	err := client.DoRawPost(page, url.Values{
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupWallPane$NewPost":                       {message},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupWallPane$NewPostButton":                 {},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$rbxGroupRoleSetMembersPane$currentRoleSetID": {},

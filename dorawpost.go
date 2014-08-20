@@ -58,7 +58,7 @@ func recurseNode(node *html.Node, f func(*html.Node) bool) {
 // `page` must be a full URL, including query values, if required.
 //
 // Whether the client needs to be logged in varies depending on the request.
-func DoRawPost(client *Client, page string, params url.Values) (err error) {
+func (client *Client) DoRawPost(page string, params url.Values) (err error) {
 	// Get form data from URL
 	resp, err := client.Get(page)
 	if err = client.AssertResp(resp, err); err != nil {
