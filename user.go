@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"github.com/anaminus/rbxweb/util"
 	"net/http"
 	"net/url"
 )
@@ -22,9 +21,9 @@ type UserInfo struct {
 // GetUserInfo returns information about the current user.
 //
 // This function requires the client to be logged in.
-func GetUserInfo(client *http.Client) (info UserInfo, err error) {
-	resp, err := client.Get(util.GetURL(`www`, `/MobileAPI/UserInfo`, nil))
-	if err = util.AssertResp(resp, err); err != nil {
+func GetUserInfo(client *Client) (info UserInfo, err error) {
+	resp, err := client.Get(client.GetURL(`www`, `/MobileAPI/UserInfo`, nil))
+	if err = client.AssertResp(resp, err); err != nil {
 		return info, err
 	}
 	defer resp.Body.Close()
@@ -35,55 +34,53 @@ func GetUserInfo(client *http.Client) (info UserInfo, err error) {
 	return info, nil
 }
 
-// GetCurrentUserID returns the ID of the user currently logged in.
+// GetCurrentUserId returns the id of the user currently logged in.
 //
 // This function requires the client to be logged in.
-func GetCurrentUserID(client *http.Client) (id int32, err error) {
-	resp, err := client.Get(util.GetURL(`www`, `/Game/GetCurrentUser.ashx`, nil))
-	if err = util.AssertResp(resp, err); err != nil {
+func GetCurrentUserId(client *Client) (id int32, err error) {
+	resp, err := client.Get(client.GetURL(`www`, `/Game/GetCurrentUser.ashx`, nil))
+	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
 	defer resp.Body.Close()
 
 	var r bytes.Buffer
 	r.ReadFrom(resp.Body)
-	id, err = util.Atoi32(r.String())
+	id, err = client.Atoi32(r.String())
 	if err != nil {
 		return 0, errors.New("user is not authorized")
 	}
 	return id, nil
 }
 
-// GetIDFromName returns a user ID from a user name. If `name` is empty, then
-// the ID of the current user is returned.
-func GetIDFromName(client *http.Client, name string) (id int32, err error) {
+// GetIdFromName returns a user id from a user name.
+func GetIdFromName(client *Client, name string) (id int32, err error) {
 	if name == "" {
-		return GetCurrentUserID(client)
+		return 0, errors.New("name not specified")
 	}
 	query := url.Values{
 		"UserName": {name},
 	}
-	req, _ := http.NewRequest("HEAD", util.GetURL(`www`, `/User.aspx`, query), nil)
+	req, _ := http.NewRequest("HEAD", client.GetURL(`www`, `/User.aspx`, query), nil)
 	resp, err := client.Do(req)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
 	resp.Body.Close()
 	values, err := url.ParseQuery(resp.Header.Get("Location"))
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
-	return util.Atoi32(values.Get("ID"))
+	return client.Atoi32(values.Get("ID"))
 }
 
-// GetNameFromID returns a user name from a user ID. If `id` is 0, then the
-// name of the current user will be returned.
-func GetNameFromID(client *http.Client, id int32) (name string, err error) {
+// GetNameFromId returns a user name from a user id.
+func GetNameFromId(client *Client, id int32) (name string, err error) {
 	if id == 0 {
-		id, _ = GetCurrentUserID(client)
+		return "", errors.New("id not specified")
 	}
-	resp, err := client.Get(util.GetURL(`api`, `/users/`+util.I32toa(id), nil))
-	if err = util.AssertResp(resp, err); err != nil {
+	resp, err := client.Get(client.GetURL(`api`, `/users/`+client.I32toa(id), nil))
+	if err = client.AssertResp(resp, err); err != nil {
 		return "", err
 	}
 	defer resp.Body.Close()

@@ -2,8 +2,6 @@ package rbxweb
 
 import (
 	"code.google.com/p/go.net/html"
-	"github.com/anaminus/rbxweb/util"
-	"net/http"
 	"net/url"
 )
 
@@ -60,10 +58,10 @@ func recurseNode(node *html.Node, f func(*html.Node) bool) {
 // `page` must be a full URL, including query values, if required.
 //
 // Whether the client needs to be logged in varies depending on the request.
-func DoRawPost(client *http.Client, page string, params url.Values) (err error) {
+func DoRawPost(client *Client, page string, params url.Values) (err error) {
 	// Get form data from URL
 	resp, err := client.Get(page)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return err
 	}
 	defer resp.Body.Close()
@@ -97,7 +95,7 @@ func DoRawPost(client *http.Client, page string, params url.Values) (err error) 
 
 	// Post to URL with parameters
 	resp, err = client.PostForm(page, params)
-	if err = util.AssertResp(resp, err); err != nil {
+	if err = client.AssertResp(resp, err); err != nil {
 		return err
 	}
 	resp.Body.Close()

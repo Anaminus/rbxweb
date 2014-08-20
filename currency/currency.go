@@ -6,16 +6,14 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/anaminus/rbxweb"
-	"github.com/anaminus/rbxweb/util"
 	"io"
-	"net/http"
 	"net/url"
 	"os"
 	"time"
 )
 
-func TradeTickets(client *http.Client, tickets int64, robux int64, limit bool, split bool) (err error) {
-	page := util.GetURL(`www`, `/My/Money.aspx`, nil)
+func TradeTickets(client *rbxweb.Client, tickets int64, robux int64, limit bool, split bool) (err error) {
+	page := client.GetURL(`www`, `/My/Money.aspx`, nil)
 	query := url.Values{
 		"__EVENTTARGET":                                                           {"ctl00$ctl00$cphRoblox$cphMyRobloxContent$ctl00$SubmitTradeButton"},
 		"__VIEWSTATE":                                                             {},
@@ -39,8 +37,8 @@ func TradeTickets(client *http.Client, tickets int64, robux int64, limit bool, s
 	return
 }
 
-func TradeRobux(client *http.Client, robux int64, tickets int64, limit bool, split bool) (err error) {
-	page := util.GetURL(`www`, `/My/Money.aspx`, nil)
+func TradeRobux(client *rbxweb.Client, robux int64, tickets int64, limit bool, split bool) (err error) {
+	page := client.GetURL(`www`, `/My/Money.aspx`, nil)
 	query := url.Values{
 		"__EVENTTARGET":                                                           {"ctl00$ctl00$cphRoblox$cphMyRobloxContent$ctl00$SubmitTradeButton"},
 		"__VIEWSTATE":                                                             {},

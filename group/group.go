@@ -2,8 +2,7 @@
 package group
 
 import (
-	"github.com/anaminus/rbxweb/util"
-	"net/http"
+	"github.com/anaminus/rbxweb"
 	"net/url"
 )
 
@@ -12,8 +11,8 @@ import (
 // status.
 //
 // This function requires the client to be logged in.
-func Shout(client *http.Client, groupID int32, message string) (success bool) {
-	page := util.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {util.I32toa(groupID)}})
+func Shout(client *rbxweb.Client, groupID int32, message string) (success bool) {
+	page := client.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {client.I32toa(groupID)}})
 	err := rbxweb.DoRawPost(client, page, url.Values{
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupStatusPane$StatusTextBox":               {message},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupStatusPane$StatusSubmitButton":          {},
@@ -29,8 +28,8 @@ func Shout(client *http.Client, groupID int32, message string) (success bool) {
 // must have a group role that has permission to post to the group's wall.
 //
 // This function requires the client to be logged in.
-func Wall(client *http.Client, groupID int32, message string) (success bool) {
-	page := util.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {util.I32toa(groupID)}})
+func Wall(client *rbxweb.Client, groupID int32, message string) (success bool) {
+	page := client.GetURL(`www`, `/My/Groups.aspx`, url.Values{"gid": {client.I32toa(groupID)}})
 	err := rbxweb.DoRawPost(client, page, url.Values{
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupWallPane$NewPost":                       {message},
 		"ctl00$ctl00$cphRoblox$cphMyRobloxContent$GroupWallPane$NewPostButton":                 {},
