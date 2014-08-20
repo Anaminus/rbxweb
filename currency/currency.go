@@ -33,7 +33,7 @@ func TradeTickets(client *rbxweb.Client, tickets int64, robux int64, limit bool,
 	} else {
 		query.Set("ctl00$ctl00$cphRoblox$cphMyRobloxContent$ctl00$AllowSplitTradesCheckBox", "off")
 	}
-	err = rbxweb.DoRawPost(client, page, query)
+	err = client.DoRawPost(page, query)
 	return
 }
 
@@ -58,6 +58,6 @@ func TradeRobux(client *rbxweb.Client, robux int64, tickets int64, limit bool, s
 	} else {
 		query.Set("ctl00$ctl00$cphRoblox$cphMyRobloxContent$ctl00$AllowSplitTradesCheckBox", "off")
 	}
-	err = rbxweb.DoRawPost(client, page, query)
+	err = client.DoRawPost(page, query)
 	return
 }
