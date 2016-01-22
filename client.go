@@ -66,7 +66,7 @@ func (client *Client) AssertResp(resp *http.Response, err error) error {
 	if err != nil {
 		return err
 	}
-	if resp.StatusCode >= 200 && resp.StatusCode < 300 {
+	if resp.StatusCode < 200 && resp.StatusCode >= 300 {
 		resp.Body.Close()
 		return errors.New(strconv.Itoa(resp.StatusCode) + ": " + http.StatusText(resp.StatusCode))
 	}
