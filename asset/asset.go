@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 )
 
@@ -63,7 +64,7 @@ func GetLatestModel(client *rbxweb.Client, userId int32) (assetId int64, err err
 		"SortType":          {"RecentlyUpdated"},
 		"IncludeNotForSale": {"true"},
 		"ResultsPerPage":    {"1"},
-		"CreatorID":         {client.I32toa(userId)},
+		"CreatorID":         {strconv.FormatInt(int64(userId), 10)},
 	}
 	resp, err := client.Get(client.GetURL(`api`, `/catalog/json`, query))
 	if err = client.AssertResp(resp, err); err != nil {
@@ -84,7 +85,7 @@ func GetLatestModel(client *rbxweb.Client, userId int32) (assetId int64, err err
 // GetIdFromVersion returns an asset id from an asset version id.
 func GetIdFromVersion(client *rbxweb.Client, assetVersionId int64) (assetId int64, err error) {
 	query := url.Values{
-		"avid": {client.I64toa(assetVersionId)},
+		"avid": {strconv.FormatInt(assetVersionId, 10)},
 	}
 
 	// This relies on how asset names are converted to url names. Currently,
@@ -101,7 +102,7 @@ func GetIdFromVersion(client *rbxweb.Client, assetVersionId int64) (assetId int6
 		return 0, err
 	}
 
-	return client.Atoi64(values.Get("id"))
+	return strconv.ParseInt(values.Get("id"), 10, 64)
 }
 
 // Upload generically uploads data from `reader` as an asset to the ROBLOX
@@ -141,7 +142,7 @@ func Upload(client *rbxweb.Client, reader io.Reader, info url.Values) (assetVers
 
 	r := new(bytes.Buffer)
 	r.ReadFrom(resp.Body)
-	assetVersionId, _ = client.Atoi64(r.String())
+	assetVersionId, _ = strconv.ParseInt(r.String(), 10, 64)
 
 	return assetVersionId, err
 }
@@ -154,7 +155,7 @@ func Upload(client *rbxweb.Client, reader io.Reader, info url.Values) (assetVers
 // This function requires the client to be logged in.
 func UploadModel(client *rbxweb.Client, reader io.Reader, modelId int64, info url.Values) (assetVersionId int64, err error) {
 	query := url.Values{
-		"assetid": {client.I64toa(modelId)},
+		"assetid": {strconv.FormatInt(modelId, 10)},
 		"type":    {"Model"},
 		//	"name":          {"Unnamed Model"},
 		//	"description":   {""},
@@ -191,7 +192,7 @@ func UploadModelFile(client *rbxweb.Client, filename string, modelId int64, info
 // This function requires the client to be logged in.
 func UpdatePlace(client *rbxweb.Client, reader io.Reader, placeId int64) (err error) {
 	query := url.Values{
-		"assetid": {client.I64toa(placeId)},
+		"assetid": {strconv.FormatInt(placeId, 10)},
 		"type":    {"Place"},
 	}
 	buf := new(bytes.Buffer)
@@ -248,7 +249,7 @@ type Info struct {
 // GetInfo returns information about an asset, given an asset id.
 func GetInfo(client *rbxweb.Client, id int64) (info Info, err error) {
 	query := url.Values{
-		"assetId": {client.I64toa(id)},
+		"assetId": {strconv.FormatInt(id, 10)},
 	}
 	resp, err := client.Get(client.GetURL(`api`, `/marketplace/productinfo`, query))
 	if err = client.AssertResp(resp, err); err != nil {

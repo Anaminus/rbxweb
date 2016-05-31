@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net/http"
 	"net/url"
+	"strconv"
 )
 
 // Info contains information about the current user.
@@ -47,11 +48,11 @@ func GetCurrentId(client *Client) (id int32, err error) {
 
 	var r bytes.Buffer
 	r.ReadFrom(resp.Body)
-	id, err = client.Atoi32(r.String())
+	n, err := strconv.ParseInt(r.String(), 10, 32)
 	if err != nil {
 		return 0, errors.New("user is not authorized")
 	}
-	return id, nil
+	return int32(n), nil
 }
 
 // GetIdFromName returns a user id from a user name.
@@ -72,7 +73,9 @@ func GetIdFromName(client *Client, name string) (id int32, err error) {
 	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
-	return client.Atoi32(values.Get("ID"))
+
+	n, err := strconv.ParseInt(values.Get("ID"), 10, 32)
+	return int32(n), err
 }
 
 // GetNameFromId returns a user name from a user id.
@@ -80,7 +83,7 @@ func GetNameFromId(client *Client, id int32) (name string, err error) {
 	if id == 0 {
 		return "", errors.New("id not specified")
 	}
-	resp, err := client.Get(client.GetURL(`api`, `/users/`+client.I32toa(id), nil))
+	resp, err := client.Get(client.GetURL(`api`, `/users/`+strconv.FormatInt(int64(id), 10), nil))
 	if err = client.AssertResp(resp, err); err != nil {
 		return "", err
 	}
