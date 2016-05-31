@@ -4,6 +4,7 @@ package set
 import (
 	"github.com/anaminus/rbxweb"
 	"net/url"
+	"strconv"
 )
 
 // Add adds an asset to a set. The set must belong to the current user, and
@@ -13,8 +14,8 @@ import (
 func Add(client *rbxweb.Client, assetId int64, setId int32) (err error) {
 	query := url.Values{
 		"rqtype":  {"addtoset"},
-		"assetId": {client.I64toa(assetId)},
-		"setId":   {client.I32toa(setId)},
+		"assetId": {strconv.FormatInt(assetId, 10)},
+		"setId":   {strconv.FormatInt(int64(setId), 10)},
 	}
 
 	resp, err := client.Post(client.GetURL(`www`, `/Sets/SetHandler.ashx`, query), "", nil)

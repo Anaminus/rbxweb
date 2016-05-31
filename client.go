@@ -72,27 +72,3 @@ func (client *Client) AssertResp(resp *http.Response, err error) error {
 	}
 	return nil
 }
-
-// Atoi32 converts a string to an int32.
-func (client *Client) Atoi32(s string) (i int32, err error) {
-	i64, err := strconv.ParseInt(s, 10, 32)
-	if err != nil {
-		return 0, err
-	}
-	return int32(i64), nil
-}
-
-// Atoi64 converts a string to an int64.
-func (client *Client) Atoi64(s string) (i int64, err error) {
-	return strconv.ParseInt(s, 10, 64)
-}
-
-// I32toa converts an int32 to a string.
-func (client *Client) I32toa(i int32) (s string) {
-	return strconv.FormatInt(int64(i), 10)
-}
-
-// I64toa converts an int64 to a string.
-func (client *Client) I64toa(i int64) (s string) {
-	return strconv.FormatInt(i, 10)
-}
