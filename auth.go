@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
+	"regexp"
+	"io/ioutil"
 )
 
 var ErrLoggedIn = errors.New("client is already logged in")
@@ -71,4 +73,17 @@ func (client *Client) Logout() (err error) {
 	}
 	resp.Body.Close()
 	return nil
+}
+
+func (client *Client) GetCSRFToken() (string, error) {
+	res, err := client.Get(client.GetSecureURL(`www`, `/premium/membership`, nil))
+	if err != nil {
+		return "", err
+	}
+	defer res.Body.Close()
+
+	re := regexp.MustCompile(`setToken\('(.+)'\)`)
+	Body, _ := ioutil.ReadAll(res.Body)
+
+	return string(re.FindAllSubmatch(Body, -1)[0][1]), nil // Apparently there's no way to make regexp work on readers like this
 }
