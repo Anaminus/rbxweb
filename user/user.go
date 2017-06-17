@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"github.com/anaminus/rbxweb"
 )
 
 // Info contains information about the current user.
@@ -23,7 +24,7 @@ type Info struct {
 // GetInfo returns information about the current user.
 //
 // This function requires the client to be logged in.
-func GetInfo(client *Client) (info Info, err error) {
+func GetInfo(client *rbxweb.Client) (info Info, err error) {
 	resp, err := client.Get(client.GetURL(`www`, `/MobileAPI/UserInfo`, nil))
 	if err = client.AssertResp(resp, err); err != nil {
 		return info, err
@@ -39,7 +40,7 @@ func GetInfo(client *Client) (info Info, err error) {
 // GetCurrentId returns the id of the user currently logged in.
 //
 // This function requires the client to be logged in.
-func GetCurrentId(client *Client) (id int32, err error) {
+func GetCurrentId(client *rbxweb.Client) (id int32, err error) {
 	resp, err := client.Get(client.GetURL(`www`, `/Game/GetCurrentUser.ashx`, nil))
 	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
@@ -56,30 +57,37 @@ func GetCurrentId(client *Client) (id int32, err error) {
 }
 
 // GetIdFromName returns a user id from a user name.
-func GetIdFromName(client *Client, name string) (id int32, err error) {
+func GetIdFromName(client *rbxweb.Client, name string) (id int32, err error) {
 	if name == "" {
 		return 0, errors.New("name not specified")
 	}
 	query := url.Values{
-		"UserName": {name},
+		"username": {name},
 	}
-	req, _ := http.NewRequest("HEAD", client.GetURL(`www`, `/User.aspx`, query), nil)
+	req, _ := http.NewRequest("GET", client.GetSecureURL(`api`, `/users/get-by-username`, query), nil)
 	resp, err := client.Do(req)
-	if err = client.AssertResp(resp, err); err != nil {
-		return 0, err
-	}
-	resp.Body.Close()
-	values, err := url.ParseQuery(resp.Header.Get("Location"))
+	defer resp.Body.Close()
 	if err = client.AssertResp(resp, err); err != nil {
 		return 0, err
 	}
 
-	n, err := strconv.ParseInt(values.Get("ID"), 10, 32)
-	return int32(n), err
+	var userIdResult struct {
+		Id float64
+		Username string
+	}
+	err = json.NewDecoder(resp.Body).Decode(&userIdResult)
+	if err != nil {
+		return 0, errors.New("JSON decode failed: " + err.Error())
+	}
+
+	if userIdResult.Id == 0 {
+		return 0, errors.New("user doesn't exist")
+	}
+	return int32(userIdResult.Id), nil
 }
 
 // GetNameFromId returns a user name from a user id.
-func GetNameFromId(client *Client, id int32) (name string, err error) {
+func GetNameFromId(client *rbxweb.Client, id int32) (name string, err error) {
 	if id == 0 {
 		return "", errors.New("id not specified")
 	}
