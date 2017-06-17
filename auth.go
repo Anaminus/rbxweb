@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"regexp"
 	"io/ioutil"
+	"strconv"
 )
 
 var ErrLoggedIn = errors.New("client is already logged in")
@@ -16,16 +17,10 @@ var ErrLoggedIn = errors.New("client is already logged in")
 // Login logs the client into a user account on the website. This is
 // neccessary for many API functions to properly execute.
 func (client *Client) Login(username string, password string) (err error) {
-	bd, err := json.Marshal(map[string]interface{}{
-		"userName":        username,
-		"password":        password,
-		"isCaptchaOn":     false,
-		"challenge":       "",
-		"captchaResponse": "",
-	})
-	if err != nil {
-		return err
-	}
+	Values := url.Values{}
+	Values.Set("username", username)
+	Values.Set("password", password)
+	bd := Values.Encode()
 
 	// Ensure the client has a cookiejar
 	if client.Jar == nil {
@@ -41,8 +36,8 @@ func (client *Client) Login(username string, password string) (err error) {
 		}
 	}
 
-	req, _ := http.NewRequest("POST", client.GetSecureURL(`www`, `/Services/Secure/LoginService.asmx/ValidateLogin`, nil), bytes.NewReader(bd))
-	req.Header.Add("Content-Type", "application/json; charset=utf-8")
+	req, _ := http.NewRequest("POST", client.GetSecureURL(`api`, `/v2/login`, nil), bytes.NewReader([]byte(bd)))
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded; charset=utf-8")
 
 	resp, err := client.Do(req)
 	if err = client.AssertResp(resp, err); err != nil {
@@ -51,14 +46,21 @@ func (client *Client) Login(username string, password string) (err error) {
 	defer resp.Body.Close()
 
 	// Check response data
-	// {"d":{"sl_translate":"Message","IsValid":true,"Message":"","ErrorCode":""}}
+	// {"userId":12345} on success,
+	// {"errors":[{"code":1,"message":"Incorrect password or username. Please try again."}]} on failure
 	respData := make(map[string]interface{})
 	if err := json.NewDecoder(resp.Body).Decode(&respData); err != nil {
 		return errors.New("Login failed. JSON decode failed. " + err.Error())
 	}
-	d := respData["d"].(map[string]interface{})
-	if !d["IsValid"].(bool) {
-		return errors.New("Login failed. Error code " + d["ErrorCode"].(string) + ": \"" + d["Message"].(string) + "\"")
+
+	if _, ok := respData["userId"].(float64); ok == false {
+		var loginError map[string]interface{}
+		if respData["errors"] != nil {
+			loginError = respData["errors"].([]interface{})[0].(map[string]interface{})
+		} else {
+			loginError = respData
+		}
+		return errors.New("Login failed. Error code " + strconv.FormatInt(int64(loginError["code"].(float64)), 10) + ": \"" + loginError["message"].(string) + "\"")
 	}
 	resp.Body.Close()
 	return nil
@@ -66,7 +68,7 @@ func (client *Client) Login(username string, password string) (err error) {
 
 // Logout logs the client of out of the current user account.
 func (client *Client) Logout() (err error) {
-	req, _ := http.NewRequest("POST", client.GetSecureURL(`www`, `/authentication/logout`, nil), nil)
+	req, _ := http.NewRequest("POST", client.GetSecureURL(`api`, `/sign-out/v1`, nil), nil)
 	resp, err := client.Do(req)
 	if err = client.AssertResp(resp, err); err != nil {
 		return err
