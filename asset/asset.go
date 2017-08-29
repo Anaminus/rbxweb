@@ -261,3 +261,80 @@ func GetInfo(client *rbxweb.Client, id int64) (info Info, err error) {
 	dec.Decode(&info)
 	return
 }
+
+func UserOwnsAsset(client *rbxweb.Client, assetId int64, userId int64) (bool, error) {
+	query := url.Values{
+		"userId": {strconv.FormatInt(userId, 10)},
+		"assetId": {strconv.FormatInt(assetId, 10)},
+	}
+	resp, err := client.Get(client.GetSecureURL(`api`, `/Ownership/HasAsset`, query))
+	if err = client.AssertResp(resp, err); err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	var result interface{}
+	dec := json.NewDecoder(resp.Body)
+	dec.Decode(&result)
+
+	if owns, ok := result.(bool); ok {
+		return owns, nil
+	} else {
+		errorData := result.(map[string]interface{})
+		return false, errors.New("Failed to check if user owns asset. Status code " + strconv.FormatInt(int64(errorData["code"].(float64)), 10) + ", message: " + errorData["message"].(string))
+	}
+}
+
+type AssetOptions struct {
+	Name string
+	Description string
+	EnableComments bool
+	Genre int64
+	PublicDomain bool
+}
+
+func ChangeAssetOptions(client *rbxweb.Client, assetId int64, options AssetOptions) error {
+	page := client.GetSecureURL(`www`, `/my/item.aspx`, url.Values{"id": {strconv.FormatInt(assetId, 10)}})
+	values := url.Values{
+		"ctl00$cphRoblox$NameTextBox": {options.Name},
+		"ctl00$cphRoblox$DescriptionTextBox": {options.Description},
+		"ctl00$cphRoblox$actualGenreSelection": {strconv.FormatInt(options.Genre, 10)},
+		"GenreButtons2": {strconv.FormatInt(options.Genre, 10)},
+		"comments": {""},
+		"rdoNotifications": {"on"},
+		"__EVENTTARGET": {"ctl00$cphRoblox$SubmitButtonBottom"},
+	}
+
+	if options.EnableComments {
+		values.Set("ctl00$cphRoblox$EnableCommentsCheckBox", "on")
+	}
+	if options.PublicDomain {
+		values.Set("ctl00$cphRoblox$PublicDomainCheckBox", "on")
+	}
+
+	return client.DoRawPost(page, values)
+}
+
+func DisownAsset(client *rbxweb.Client, assetId int64) error {
+	CSRF, err := client.GetCSRFToken()
+
+	if err != nil {
+		return err
+	}
+
+	data := url.Values{
+		"assetId": {strconv.FormatInt(assetId, 10)},
+	}
+
+	deleteRequest, _ := http.NewRequest("POST", client.GetSecureURL(`www`, `/asset/delete-from-inventory`, nil), bytes.NewBufferString(data.Encode()))
+	deleteRequest.Header.Set("X-CSRF-Token", CSRF)
+	deleteRequest.Header.Set("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
+
+	response, err := client.Do(deleteRequest)
+	if err = client.AssertResp(response, err); err != nil {
+		return err
+	}
+	response.Body.Close()
+
+	return nil
+}

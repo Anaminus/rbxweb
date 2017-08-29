@@ -86,6 +86,9 @@ func (client *Client) DoRawPost(page string, params url.Values) (err error) {
 	// Look up validation parameters
 	findInput(inputs, &params, `__VIEWSTATE`)
 	findInput(inputs, &params, `__EVENTVALIDATION`)
+	findInput(inputs, &params, `__VIEWSTATEGENERATOR`)
+	findInput(inputs, &params, `__PREVIOUSPAGE`)
+	findInput(inputs, &params, `__EVENTARGUMENT`)
 
 	for name, value := range params {
 		if len(value) == 0 || value[0] == "" {
